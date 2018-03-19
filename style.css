@@ -1,0 +1,93 @@
+*{
+	box-sizing: border-box;
+}
+body{
+	margin:0;
+	padding:0;
+}
+
+.pizarra{
+	display:block;
+	position: relative;
+	background-color: black;
+	width:600px;
+	height:400px;
+	margin:60px auto;
+	overflow: hidden;
+}
+
+.puntaje{
+    color: white;
+    background-color: green;
+    position: absolute;
+    top: 360px;
+    right: 15px;
+    padding: 5px;
+    border: 1px solid white;
+    font-size: 14px;
+}
+
+.letras{
+	color:white;
+	background-color:black;
+	border:1px solid white;
+	padding:5px;
+	font-size:14px;
+	position:absolute;
+	top:-50px;
+	left: 60px;
+	animation: lluvia-de-letras 15s infinite cubic-bezier(0.25, 0.46, 0.45, 0.94);
+	transition:all 0.3s linear;
+}
+
+.pressed {
+	background-color:lightgreen;
+	color:green;
+}
+
+.danger-zone{
+	color:red;
+}
+
+
+
+
+.letra65{animation-delay:4.1s; left:2px;}
+.letra66{animation-delay:1.2s; left:322px;}
+.letra67{animation-delay:2.3s; left:132px;}
+.letra68{animation-delay:3.4s; left:225px;}
+.letra69{animation-delay:4.5s; left:432px;}
+.letra70{animation-delay:5.6s; left:232px;}
+.letra71{animation-delay:1.7s; left:125px;}
+.letra72{animation-delay:2.8s; left:521px;}
+.letra73{animation-delay:11.9s; left:421px;}
+.letra74{animation-delay:4.1s; left:321px;}
+.letra75{animation-delay:5.2s; left:358px;}
+.letra76{animation-delay:9.3s; left:370px;}
+.letra77{animation-delay:7.4s; left:265px;}
+.letra78{animation-delay:3.5s; left:165px;}
+.letra79{animation-delay:4.6s; left:23px;}
+.letra80{animation-delay:5.7s; left:76px;}
+.letra81{animation-delay:8.8s; left:194px;}
+.letra82{animation-delay:2.9s; left:167px;}
+.letra83{animation-delay:9.1s; left:230px;}
+.letra84{animation-delay:4.2s; left:217px;}
+.letra85{animation-delay:5.3s; left:317px;}
+.letra86{animation-delay:10.4s; left:410px;}
+.letra87{animation-delay:1.5s; left:452px;}
+.letra88{animation-delay:12.6s; left:456px;}
+.letra89{animation-delay:13.7s; left:519px;}
+.letra90{animation-delay:4.8s; left:599px;}
+
+@keyframes lluvia-de-letras {
+	from{
+		top:-10px;
+	}
+	to{
+		top:410px;
+	}
+}
+
+.hidden{
+	opacity:0;
+}
