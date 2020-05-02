@@ -1,65 +1,382 @@
-// Primero guardamos en una variable todas las letras :D
-var letras = document.querySelectorAll(".letras");
+// TODO: 
 
-// Tambien queremos tener un puntaje
-var puntaje = 0;
+// - Corregir bug de primera palabra. Todo debe salir de available words. 
+// - Agregar Input handler para escribir palabras
+// - Determinar si lo que escribio el usuario es una palabra existente. 
+// - Crear funcion que maneje que pasa si es la palabra correcta. 
+// - 
 
-// Luego tenemos que crear una funcion (que reciba un evento) 
-// y que se encargue de ver que pasara cuando una tecla es presionada. 
-function presskey(e){
-	//console.log(e.keyCode);
-	
-	// Seleccionamos la letra que queremos usando el keyCode presionado
-	var letra = document.querySelector(".letra"+e.keyCode);
-	
-	// Solo queremos ejecutarlo si la tecla existe como elemento html y no tiene clase hidden (es visible)
-	if(letra && !letra.classList.contains("hidden")){
-		
-		// Esto hara que se vea verde 
-		letra.classList.add("pressed");	
-	}
+
+
+// Set some variables
+const WORDS = ["carro", "perro", "caro", "enorme", "peligro", "armadillo", "sueño", "ahora", "semana", "año", "hoy", "mañana", "ayer", "calendario", "hora", "minuto", "segundo", "reloj", "usar", "hacer", "ir", "poder", "venir", "reirse", "ver", "lejos", "cerca", "alto", "flaco", "erudito", "otoño", "aleman", "estaño", "helio", "alondra", "esternon", "prueba", "programa", "televisor", "aluminio", "plata", "oro", "enano", "gitante", "experto", "estructura"]
+let visibleWords = []
+let availableWords = []
+let lastWordRow = 19
+let gameHasEnded = false
+let gridStartX = 200
+let gridStartY = 200
+let currentTicks = 0
+let targetTicks = 15
+let currentWord = null
+let currentWordBeingGuessed = ""
+let currentWordBeingGuessedText = undefined
+let wordWasFound = false
+let resumePlay = false
+let gameScene,
+    gameOverScene,
+    inputPause
+    
+
+// just for now
+let style = new PIXI.TextStyle({
+    fontFamily: "Arial",
+    fontSize: 15,
+    fill: "black"
+})
+    
+
+
+//Create a Pixi Application
+let app = new PIXI.Application({
+    width: window.innerWidth,         // default: 800
+    height: window.innerHeight,        // default: 600
+    antialias: true,    // default: false
+    transparent: false, // default: false
+    resolution: 1,       // default: 1
+    forceCanvas: true
+})
+
+setup()
+// Initialize the game sprites, set the game `state` to `play`
+// and start the 'gameLoop'
+
+// MAIN GAME FUNCTIONS
+
+function setup(){
+    // Creating Scenes
+    gameScene = new PIXI.Container();
+    app.stage.addChild(gameScene);
+
+    gameOverScene = new PIXI.Container();
+    app.stage.addChild(gameOverScene);
+    gameOverScene.visible = false;
+
+
+    // Set up app on DOM
+    document.body.appendChild(app.view)
+
+    // Set up renderer
+    app.renderer.backgroundColor = 0xf65599
+    app.renderer.view.style.position = "absolute"
+    app.renderer.view.style.display = "block"
+    app.renderer.autoResize = true
+    app.renderer.resize(window.innerWidth, window.innerHeight)
+
+    // Create title
+    printTitle("Word Tetris!")
+
+    // Print user input legend
+    printUserInputLeyend()
+
+    // Add the 'keydown' event listener to our document
+    document.addEventListener('keyup', onKeyDown);
+
+    // Create Grid square
+    drawTetrisAreaSquare()
+
+    // Create first template words
+    let counter = 0
+    for (i = WORDS.length; i > 0; i--) {
+        if (WORDS[counter] != undefined){
+            let squares = []
+            for (j = 0; j < WORDS[counter].length; j++) {
+
+                let square = {
+                    props: { content: WORDS[counter][j], focus: false, visible: true },
+                    pos: { x: gridStartX + j * 30, y: gridStartY - 30 },
+                    rectangle: new PIXI.Graphics(),
+                    style: style,
+                    message: new PIXI.Text(WORDS[counter][j], style)
+
+                }
+                squares.push(square)
+                //drawGridSquare(square)
+            }
+            availableWords.push({
+                word: WORDS[counter],
+                active: true,
+                squares: squares,
+                row: 0
+            })
+            counter++
+        }
+        
+    }
+    console.log(visibleWords)
+    
+    
+
+    //set the game state to `play`
+    state = pause;
+
+    //Start the game loop 
+    app.ticker.add(delta => gameLoop(delta));
 }
 
-// Tambien necesitamos una funcion que se encargue de esconder la tecla luego
-// de que la transicion de caambio de color de ser presionada suceda. 
-function endOfPressing(e){
-	// Si el property que ha terminado de transisionar no es color, no haremos nada
-	if(e.propertyName !== "color"){return;}	
-	
-	// Si lo es, le quitaremos la clase por motivos de seguridad
-	this.classList.remove("pressed");
-	
-	// y le agregaremos la clase hidden (para que la tecla desaparezca)
-	this.classList.add("hidden");
-
-	//Y actualizaremos el puntaje
-	puntaje++;
-	renderizarPuntaje(puntaje);
+function gameLoop(delta) {
+    
+    
+    
+    //Update the current game state
+    state(delta)
 }
 
-// Y finalmente necesitamos una funcion que nos sirva para saber cuando la
-// tecla ha vuelto a comenzar su recorrido (arriba de la pantalla), para
-// volverla a mostrar :D
-function endOfAnimation(e){
-	this.classList.remove("hidden");
+function pause(delta){
+    document.getElementById("pauseModal").style.display = "flex"    
+    if(resumePlay){
+        state = play
+         document.getElementById("pauseModal").style.display = "none"
+    }
 }
 
-// Esta funcion se encargara de renderizar el puntaje en la pantalla. 
-function renderizarPuntaje(puntaje){
-	document.querySelector("#puntaje").innerHTML = puntaje;
+function play(delta) {
+    //All the game logic goes here
+
+    // Check if endgame
+    verifyEndGame()
+    
+    //Runs the current game `state` in a loop and renders the sprites
+    currentTicks++
+    
+    // Move all words down
+    if (currentTicks % targetTicks == 0) {
+        
+        //console.log(currentWord)
+        //console.log(lastWordRow)
+        if (currentWord == null){
+            currentWord = availableWords.pop()
+            visibleWords.push(currentWord)
+            console.log("Starting the game with : " + currentWord.word)
+        }else {
+            //console.log("updating position of: " + currentWord.word)
+            if (currentWord.row - 1 >= lastWordRow) {
+                lastWordRow--
+                currentWord = availableWords.pop()
+                visibleWords.push(currentWord)
+            } else if (currentWord.row - 1 <= lastWordRow) {
+                currentWord.squares = currentWord.squares.map((square) => {
+                    square.rectangle.y = square.pos.y = square.pos.y + 30
+                    if(currentWord.row == 0){
+                        drawGridSquare(square)
+                    }
+                    if (square.props.visible){
+                        printLetter(square)
+                    }
+                    return square
+                })
+                currentWord.row++
+                currentTicks = 0
+
+            }
+        }
+        
+            
+    }
+    
+    // On input handler
+    wordWasFound = checkIfWordWasFound()
+    printCurrentGuessingWordText(currentWordBeingGuessed)
+    
+    // Update Score
+    if(wordWasFound){
+        // Write Word outside 
+        
+        let letterIndex
+        // remove squares
+        
+        
+
+        // Update scores
+        //updateScore(wordScore)
+    }
 }
 
-// Creamos un Escuchador de eventos, que estara esperando que
-// presionemos una tecla y llamara a la funcion presskey() para 
-// que esta se encargue de hacerlo funcionara. 
-document.addEventListener("keydown", presskey);
-
-// Tambien tenemos que crear 2 Escuchadores de eventos para cada tecla: 
-// el primero estara escuchando cuando se acabe la transicion del touch
-// el segundo escuchara cuando la tecla vuelva arriba (acabe una iteracion mas de su animacion)  
-for (var i = letras.length - 1; i >= 0; i--) {
-	letras[i].addEventListener("animationiteration", endOfAnimation);
-	letras[i].addEventListener("transitionend", endOfPressing);
+function end() {
+    //All the code that should run at the end of the game
+    gameScene.visible = false
+    gameOverScene.visible = true
+    
 }
 
 
+
+// TOOLS
+
+function drawTetrisAreaSquare(){
+    let rectangle = new PIXI.Graphics()
+    rectangle.lineStyle(1, 0x000000, 1)
+    rectangle.drawRect(200, 200, 300, 600)
+
+    gameScene.addChild(rectangle)
+}
+
+function drawGridSquare(square){
+    if(square.props.content != ""){
+        let rectangle = square.rectangle
+        rectangle.lineStyle(4, 0xFF3300, 1)
+        rectangle.beginFill(0x66CCFF)
+        if (square.props.focus) { rectangle.beginFill(0x33FFDD)}
+        rectangle.drawRect(0, 0, 30, 30)
+        rectangle.endFill()
+        rectangle.x = square.pos.x
+        rectangle.y = square.pos.y
+        gameScene.addChild(rectangle)
+        
+        //print the letter inside
+        printLetter(square)
+    }
+}
+
+function removeSquaresForever(squares){
+    console.log(squares)
+    squares.map(square => {
+        gameScene.removeChild(square.rectangle)
+        printLetter(square, true)
+        square.props.visible = false
+    })
+}
+
+
+function printTitle(text){
+    let style = new PIXI.TextStyle({
+        fontFamily: "Arial",
+        fontSize: 36,
+        fill: "white",
+        dropShadow: true,
+        dropShadowColor: "#000000",
+        dropShadowAngle: Math.PI / 2,
+        dropShadowDistance: 2,
+    });
+    let message = new PIXI.Text(text, style);
+    gameScene.addChild(message);
+    message.position.set(250, 120);
+}
+
+function printUserInputLeyend(){
+    let style = new PIXI.TextStyle({
+        fontFamily: "Arial",
+        fontSize: 36,
+        fill: "white",
+        dropShadow: true,
+        dropShadowColor: "#000000",
+        dropShadowAngle: Math.PI / 2,
+        dropShadowDistance: 2,
+    });
+    let message = new PIXI.Text("Estas escribiendo: ", style);
+    gameScene.addChild(message);
+    message.position.set(650, 420);
+}
+
+function printLetter(square, remove){
+    let style = square.style
+    let message = square.message
+    if(!remove){
+        gameScene.addChild(message);
+        message.position.set(square.pos.x + 10, square.pos.y + 7);
+    }else{
+        gameScene.removeChild(message);
+    }
+    
+}
+
+
+function verifyEndGame(){
+    // logic to test if game has ended. 
+    
+    
+    // Update gameHasEnded Global
+    gameHasEnded = false
+    
+    // update state
+    if (gameHasEnded) { state = end}
+}
+
+function updateScore(wordScore){
+    score = + wordScore
+    if(gameHasEnded){score = 0}
+}
+
+function checkIfWordWasFound(currentWordBeingGuessed){
+    //console.log(currentWordBeingGuessed)
+    // Check valid letter
+    let wordsFound = visibleWords.filter( ( word ) => {
+        return word.word == currentWordBeingGuessed
+    })
+    if(wordsFound.length > 0){
+        //console.log(wordsFound[0])
+        removeSquaresForever(wordsFound[0].squares)
+        printCurrentGuessingWordText("")
+        return true
+    }
+    
+    // Check if currentWord + letter is found in words starting with currentWord + letter. (memoized)
+    // Check if letter is in board
+    
+    
+    return false
+}
+
+
+function onKeyDown(key){
+    console.log(key.key)
+    
+    // Handle all text
+    if ("abcdefghijklmnñopqrstuvwxyz".includes(key.key)){
+        currentWordBeingGuessed += key.key
+        //console.log(currentWordBeingGuessed)
+    }
+
+    wordWasFound = checkIfWordWasFound(currentWordBeingGuessed)
+
+    // Handle Space for Speed
+    if(key.key == " "){
+        // Push the word to the bottom
+        currentWord.squares = currentWord.squares.map((square) => {
+            square.pos.y = square.pos.y + 30 * (lastWordRow +1 - currentWord.row)
+            drawGridSquare(square)
+            return square
+        })
+        currentWord.row = lastWordRow
+        // Got to the next word
+        lastWordRow--
+        currentWord = availableWords.pop()
+        visibleWords.push(currentWord)
+    }
+
+    // Handle Enter for new Input
+    if(key.key == "Enter"){
+        currentWordBeingGuessed = ""
+        
+    }
+    // Handle Scape for Pause
+    if(key.key == "Scape"){ state = (state == pause) ? play : pause }
+
+}
+
+function printCurrentGuessingWordText(text){
+    if (currentWordBeingGuessedText != undefined) {
+        gameScene.removeChild(currentWordBeingGuessedText)
+    }
+    if(text != ""){
+        let style = new PIXI.TextStyle({
+            fontFamily: "Arial",
+            fontSize: 28,
+            fill: "white",
+        })
+        currentWordBeingGuessedText = new PIXI.Text(text, style)
+        gameScene.addChild(currentWordBeingGuessedText)
+        currentWordBeingGuessedText.position.set(650, 520)
+    }
+     
+}
