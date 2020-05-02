@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+
+</head>
+<body>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/0.4.3/p5.min.js"></script>
+    <script src="http://rednoise.org/rita/download/rita-full.min.js"></script>
+    <script>
+        function setup() {
+
+            createCanvas(200, 200);
+            background(50);
+            textSize(20);
+            noStroke();
+
+            let words = RiTa.tokenize("The elephant took a bite!")
+            for (let i = 0; i < words.length; i++) {
+                text(words[i], 50, 50 + i * 20);
+            }
+        }
+    </script>
+</body>
+</html>

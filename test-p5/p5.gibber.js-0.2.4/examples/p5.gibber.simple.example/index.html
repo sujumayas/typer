@@ -1,0 +1,27 @@
+<head>
+  <script language="javascript" src="../resources/p5.min.js"></script>
+  <script src="../../dist/p5.gibber.js" type="text/javascript" charset="utf-8"></script>
+  <script language="javascript" src="./sketch.js"></script>
+  <link rel="stylesheet" href="../resources/examples.css">
+  
+  <link rel="stylesheet" href="../resources/monokai_sublime.css">
+  <script src="../resources/highlight.pack.js"></script>
+  <script>hljs.initHighlightingOnLoad();</script>
+</head>
+
+<body>
+  <div id='code' onclick="window.abc = true;">
+  <pre><code>// sketch.js
+function setup() {
+  createCanvas( windowWidth, windowHeight )
+
+  drums = EDrums('x*o*x*o-')
+  follow = Follow( drums )
+}
+
+function draw() {
+  background( follow.getValue() * 255 )
+}
+  </code></pre>
+  </div>
+</body>

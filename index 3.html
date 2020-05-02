@@ -19,6 +19,45 @@
 			z-index: 99999;
 			color: white;
 		}
+		.curtain{
+			width: 100vw;
+			height: 100vh;
+			position: absolute;
+			top:0;
+			left:0;
+			background-color: rgba(0,0,0,0.8);
+			z-index:999999999;
+			display: flex;
+			justify-content: center;
+			align-items: center;
+		}
+		.modal{
+			width: 600px; 
+			height: 400px;
+			background-color: white; 
+			color: black;
+			display: flex;
+			justify-content: center;
+			flex-direction: column;
+			align-items: center;
+		}
+		.modal h2 {
+			color: #f65599;
+
+		}
+		.modal button {
+			background-color:#d14982;
+			color: white;
+			width: 80px;
+			height: 40px;
+			text-transform: uppercase;
+			border: none;
+			box-shadow: none;
+			cursor: pointer;
+		}
+		.modal button:hover{
+			 background-color: #f65599;
+		}
 	</style>
 </head>
 <body>
@@ -30,6 +69,12 @@
 		<p> - Press ESCAPE pause the game and breath a little! </p>
 		<p>	- Don't let the words pile up to the top! </p>
 		<p> - Enjoy as much as you can! </p>
+	</div>
+	<div class="curtain" id="pauseModal">
+		<div class="modal">
+			<h2>JUEGO EN PAUSA</h2>
+			<button onclick="resumePlay = true">Jugar</button>
+		</div>
 	</div>
 	<script src="pixi.js"></script>
 	<script type="text/javascript">

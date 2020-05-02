@@ -22,8 +22,10 @@ let currentWord = null
 let currentWordBeingGuessed = ""
 let currentWordBeingGuessedText = undefined
 let wordWasFound = false
+let resumePlay = false
 let gameScene,
-    gameOverScene
+    gameOverScene,
+    inputPause
     
 
 // just for now
@@ -116,7 +118,7 @@ function setup(){
     
 
     //set the game state to `play`
-    state = play;
+    state = pause;
 
     //Start the game loop 
     app.ticker.add(delta => gameLoop(delta));
@@ -128,6 +130,14 @@ function gameLoop(delta) {
     
     //Update the current game state
     state(delta)
+}
+
+function pause(delta){
+    document.getElementById("pauseModal").style.display = "flex"    
+    if(resumePlay){
+        state = play
+         document.getElementById("pauseModal").style.display = "none"
+    }
 }
 
 function play(delta) {
